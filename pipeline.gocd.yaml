@@ -1,0 +1,48 @@
+format_version: 10
+pipelines:
+  ml_pipeline:
+    group: 'ML_Group'
+    label_template: '${GIT_COMMIT}'
+    lock_behavior: unlockWhenFinished
+    materials:
+      git_material:
+        git: 'https://github.com/CheahChernEu/gocd.git'
+        branch: 'main'
+        auto_update: true
+    stages:
+      - stage: 'Deploy'
+        jobs:
+          deploy_k8s:
+            tasks:
+              - exec:
+                  command: 'kubectl'
+                  arguments:
+                    - 'apply'
+                    - '-f'
+                    - 'minio.yaml'
+              - exec:
+                  command: 'kubectl'
+                  arguments:
+                    - 'apply'
+                    - '-f'
+                    - 'mlflow.yaml'
+              - exec:
+                  command: 'kubectl'
+                  arguments:
+                    - 'apply'
+                    - '-f'
+                    - 'postgres.yaml'
+      - stage: 'Run_Python_Scripts'
+        jobs:
+          execute_component_script:
+            tasks:
+              - exec:
+                  command: 'python'
+                  arguments:
+                    - 'component.py'
+          execute_upload_pipeline_script:
+            tasks:
+              - exec:
+                  command: 'python'
+                  arguments:
+                    - 'upload_pipeline.py'
