@@ -1,0 +1,58 @@
+format_version: 10
+pipelines:
+  ml_pipeline:
+    group: sample
+    label_template: ${COUNT}
+    lock_behavior: none
+    display_order: -1
+    materials:
+      gocd:
+        git: https://github.com/CheahChernEu/gocd.git
+        username: tennischeah@gmail.com
+        shallow_clone: false
+        auto_update: true
+        branch: main
+        encrypted_password: AES:927G0kGmaeCA+7ufz6xxPA==:olPaavN8eQCA8zafblhsZw==
+    stages:
+    - Deploy:
+        fetch_materials: true
+        keep_artifacts: false
+        clean_workspace: false
+        approval:
+          type: success
+          allow_only_on_success: false
+        jobs:
+          deploy_k8s:
+            timeout: 0
+            tasks:
+            - exec:
+                arguments:
+                - apply
+                - -f
+                - minio.yaml
+                command: 'kubectl'
+                run_if: passed
+            - exec:
+                arguments:
+                - apply
+                - -f
+                - postgres.yaml
+                command: 'kubectl'
+                run_if: passed
+            - exec:
+                arguments:
+                - apply
+                - -f
+                - mlflow.yaml
+                command: 'kubectl'
+                run_if: passed
+            - exec:
+                arguments:
+                - component.py
+                command: 'python'
+                run_if: passed
+            - exec:
+                arguments:
+                - upload_pipeline.py
+                command: 'python'
+                run_if: passed
