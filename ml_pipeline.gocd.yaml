@@ -51,8 +51,4 @@ pipelines:
                 - component.py
                 command: 'python'
                 run_if: passed
-            - exec:
-                arguments:
-                - upload_pipeline.py
-                command: 'python'
-                run_if: passed
+    
