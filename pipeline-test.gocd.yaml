@@ -24,7 +24,7 @@ pipelines:
         jobs:
           default_job:
             timeout: 0
-            elastic_profile_id: gocd_elastic_agent
+            elastic_profile_id: k8-elastic-test
             tasks:
             - exec:
                 arguments:
