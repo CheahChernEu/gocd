@@ -24,7 +24,7 @@ pipelines:
         jobs:
           deploy_k8s:
             timeout: 0
-            elastic_profile_id: gocd_elastic_agent
+            elastic_profile_id: demo-app
             tasks:
             - exec:
                 command: ./build
