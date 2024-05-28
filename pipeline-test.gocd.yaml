@@ -12,7 +12,7 @@ pipelines:
         shallow_clone: false
         auto_update: true
         branch: main
-        encrypted_password: AES:927G0kGmaeCA+7ufz6xxPA==:olPaavN8eQCA8zafblhsZw==
+        encrypted_password: AES:Xut8hs06ZezhtSYA1nXTbA==:yb9Ug32b/TGQ/buMJKhelQ==
     stages:
     - default_stage:
         fetch_materials: true
@@ -24,10 +24,8 @@ pipelines:
         jobs:
           default_job:
             timeout: 0
-            tasks:
             elastic_profile_id: demo-app
+            tasks:
             - exec:
-                command: './build'
+                command: ./build
                 run_if: passed
-           
-    
