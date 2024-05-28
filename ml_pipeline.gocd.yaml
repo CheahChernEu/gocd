@@ -24,7 +24,11 @@ pipelines:
         jobs:
           deploy_k8s:
             timeout: 0
+            elastic_profile_id: gocd_elastic_agent
             tasks:
             - exec:
                 command: ./build
                 run_if: passed
+
+
+
