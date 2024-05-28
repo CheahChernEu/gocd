@@ -12,7 +12,7 @@ pipelines:
         shallow_clone: false
         auto_update: true
         branch: main
-        encrypted_password: AES:927G0kGmaeCA+7ufz6xxPA==:olPaavN8eQCA8zafblhsZw==
+        encrypted_password: AES:l6u/A+LrXVRI5C+q27Dn2Q==:EM7ycjGZHfL40aLBvZ57zg==
     stages:
     - Deploy:
         fetch_materials: true
@@ -26,29 +26,5 @@ pipelines:
             timeout: 0
             tasks:
             - exec:
-                arguments:
-                - apply
-                - -f
-                - minio.yaml
-                command: 'kubectl'
+                command: ./build
                 run_if: passed
-            - exec:
-                arguments:
-                - apply
-                - -f
-                - postgres.yaml
-                command: 'kubectl'
-                run_if: passed
-            - exec:
-                arguments:
-                - apply
-                - -f
-                - mlflow.yaml
-                command: 'kubectl'
-                run_if: passed
-            - exec:
-                arguments:
-                - component.py
-                command: 'python'
-                run_if: passed
-    
