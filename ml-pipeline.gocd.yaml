@@ -1,0 +1,31 @@
+format_version: 10
+pipelines:
+  ml-pipeline:
+    group: kubernetes
+    label_template: ${COUNT}
+    lock_behavior: none
+    display_order: -1
+    materials:
+      gocd:
+        git: https://github.com/CheahChernEu/gocd.git
+        username: tennischeah@gmail.com
+        shallow_clone: false
+        auto_update: true
+        branch: main
+        encrypted_password: AES:ko7Qyd2KaaQxJShWzIzGeQ==:tlpP3Oh/84baCQUe4ekZTQ==
+    stages:
+    - ml-stage:
+        fetch_materials: true
+        keep_artifacts: false
+        clean_workspace: false
+        approval:
+          type: success
+          allow_only_on_success: false
+        jobs:
+          ml-job:
+            timeout: 0
+            elastic_profile_id: gocd-pipeline-agent
+            tasks:
+            - exec:
+                command: python3 component.py
+                run_if: passed
