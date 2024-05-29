@@ -27,7 +27,9 @@ pipelines:
             elastic_profile_id: gocd-pipeline-agent
             tasks:
             - exec:
-                command: python3 component.py
+                arguments:
+                - ./component.py
+                command: python3
                 run_if: passed
 
 
