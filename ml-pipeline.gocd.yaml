@@ -14,37 +14,25 @@ pipelines:
         branch: main
         encrypted_password: AES:1kSdWEnWWQOgEqj2XZfEdQ==:dOaWPOxvar8MBsvfh+/X2Q==
     stages:
-    - ml-stage:
-        fetch_materials: true
-        keep_artifacts: false
-        clean_workspace: false
-        approval:
-          type: success
-          allow_only_on_success: false
-        jobs:
-          ml-job:
-            timeout: 0
-            elastic_profile_id: gocd-pipeline-agent
-            tasks:
-            - exec:
-                arguments:
-                - ./component.py
-                command: python3
-                run_if: passed
-            tasks:
-            - exec:
-                arguments:
-                - ./upload_pipeline.py
-                command: python3
-                run_if: passed
-
-
-
-
-
-
-
-
-
-
-
+      - ml-stage:
+          fetch_materials: true
+          keep_artifacts: false
+          clean_workspace: false
+          approval:
+            type: success
+            allow_only_on_success: false
+          jobs:
+            - ml-job:
+                timeout: 0
+                elastic_profile_id: gocd-pipeline-agent
+                tasks:
+                  - exec:
+                      arguments:
+                        - ./component.py
+                      command: python3
+                      run_if: passed
+                  - exec:
+                      arguments:
+                        - ./upload_pipeline.py
+                      command: python3
+                      run_if: passed
