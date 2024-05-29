@@ -1,5 +1,3 @@
-from kubernetes.client import V1EnvVar, V1Volume, V1VolumeMount, V1PersistentVolumeClaimVolumeSource
-import pandas as pd
 from kfp.dsl import component, InputPath, OutputPath
 from kfp import dsl
 import re

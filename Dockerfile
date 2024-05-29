@@ -16,7 +16,7 @@ RUN echo "***** Install Python *****" && \
     rm -rf /var/lib/apt/lists/*
 
 # Install Python packages
-RUN pip install kfp==2.7.0 boto3==1.24.28
+RUN pip install kfp==2.7.0 boto3==1.24.28 pandas requests
 
 # Install kubectl
 RUN echo "**** Install kubectl ****" && \
