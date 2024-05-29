@@ -31,6 +31,12 @@ pipelines:
                 - ./component.py
                 command: python3
                 run_if: passed
+            tasks:
+            - exec:
+                arguments:
+                - ./upload_pipeline.py
+                command: python3
+                run_if: passed
 
 
 
