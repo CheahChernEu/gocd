@@ -1,7 +1,7 @@
 format_version: 10
 pipelines:
   ml-pipeline:
-    group: kubernetes
+    group: sample
     label_template: ${COUNT}
     lock_behavior: none
     display_order: -1
@@ -24,7 +24,7 @@ pipelines:
           jobs:
             - ml-job:
                 timeout: 0
-                elastic_profile_id: gocd-pipeline-agent
+                elastic_profile_id: SampleAgent
                 tasks:
                   - exec:
                       arguments:
