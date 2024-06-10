@@ -162,7 +162,7 @@ def train(file_path: InputPath("CSV")) -> str:
     from mlflow.models import infer_signature
 
 
-    mlflow.set_tracking_uri("http://mlflow-server.local/")
+    mlflow.set_tracking_uri("http://194.233.80.15:5000/")
 
     df = pd.read_csv(file_path)
 
@@ -256,11 +256,11 @@ def income_pipeline():
     train(file_path=preprocess_task.output)
     .set_env_variable(
         name="MLFLOW_TRACKING_URI",
-        value="http://mlflow-server.local/",  # Adjust service name
+        value="http://194.233.80.15:5000/",  # Adjust service name
     )
     .set_env_variable(
         name="MLFLOW_S3_ENDPOINT_URL",
-        value="http://mlflow-minio.local:30869/",  # Adjust service name and port
+        value="http://194.233.80.15:9090/",  # Adjust service name and port
     )
     .set_env_variable(
         name="AWS_ACCESS_KEY_ID",
