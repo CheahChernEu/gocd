@@ -117,5 +117,5 @@ client = Client(host=f"{KUBEFLOW_ENDPOINT}/pipeline", cookies=auth_session["sess
 # client = kfp.Client(host=f"{KUBEFLOW_ENDPOINT}/pipeline", namespace="kubeflow-user-example-com", cookies=auth_session["session_cookie"])
 
 
-client.create_run_from_pipeline_package('income.yaml', arguments={}, namespace="kubeflow-user-example-com")
+client.create_run_from_pipeline_package('./income.yaml', arguments={}, namespace="kubeflow-user-example-com")
 
