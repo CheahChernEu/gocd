@@ -100,10 +100,16 @@ def get_istio_auth_session(url: str, username: str, password: str) -> dict:
     return auth_session
 
 
+
+# Compile the pipeline
+from kfp import compiler
+
+compiler.Compiler().compile(pipeline_func=income_pipeline, package_path="income.yaml")
+
 from kfp.client import Client
 
 
-KUBEFLOW_ENDPOINT = "http://localhost:8080"
+KUBEFLOW_ENDPOINT = "http://194.233.80.15:8080"
 KUBEFLOW_USERNAME = "user@example.com"
 KUBEFLOW_PASSWORD = "12341234"
 
@@ -113,8 +119,10 @@ auth_session = get_istio_auth_session(
     password=KUBEFLOW_PASSWORD
 )
 
+
 client = Client(host=f"{KUBEFLOW_ENDPOINT}/pipeline", cookies=auth_session["session_cookie"])
 # client = kfp.Client(host=f"{KUBEFLOW_ENDPOINT}/pipeline", namespace="kubeflow-user-example-com", cookies=auth_session["session_cookie"])
 
 
 client.create_run_from_pipeline_package('income.yaml', arguments={}, namespace="kubeflow-user-example-com")
+

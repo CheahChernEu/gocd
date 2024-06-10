@@ -1,0 +1,235 @@
+# PIPELINE DEFINITION
+# Name: income-pipeline
+# Description: Pipeline for training and deploying a model trained on Census Income dataset
+components:
+  comp-download-dataset:
+    executorLabel: exec-download-dataset
+    inputDefinitions:
+      parameters:
+        url:
+          parameterType: STRING
+    outputDefinitions:
+      artifacts:
+        output_file:
+          artifactType:
+            schemaTitle: system.Artifact
+            schemaVersion: 0.0.1
+  comp-preprocess:
+    executorLabel: exec-preprocess
+    inputDefinitions:
+      artifacts:
+        file_path:
+          artifactType:
+            schemaTitle: system.Artifact
+            schemaVersion: 0.0.1
+    outputDefinitions:
+      artifacts:
+        output_file:
+          artifactType:q
+            schemaTitle: system.Artifact
+            schemaVersion: 0.0.1
+  comp-tain:
+    rexecutorLabel: exec-train
+    inputDefinitions:
+      artifacts:
+        file_path:
+          artifactType:
+            schemaTitle: system.Artifact
+            schemaVersion: 0.0.1
+    outputDefinitions:
+      parameters:
+        Output:
+          parameterType: STRING
+deploymentSpec:
+  executors:
+    exec-download-dataset:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - download_dataset
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.7.0'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&\
+          \  python3 -m pip install --quiet --no-warn-script-location 'requests' 'mlflow'\
+          \ && \"$0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef download_dataset(url: str, output_file: OutputPath()):\n    import\
+          \ requests  # Import requests inside the function\n\n    # Use requests.get()\
+          \ to download the file\n    response = requests.get(url)\n    response.raise_for_status()\
+          \  # Raise an exception for HTTP errors\n    with open(output_file, 'wb')\
+          \ as f:\n        f.write(response.content)\n\n"
+        image: python:3.9
+    exec-preprocess:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - preprocess
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.7.0'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&\
+          \  python3 -m pip install --quiet --no-warn-script-location 'pandas' 'mlflow'\
+          \ && \"$0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef preprocess(file_path: InputPath(\"CSV\"), output_file: OutputPath(\"\
+          CSV\")):\n    import pandas as pd\n\n    header = [\n        \"age\",\n\
+          \        \"workclass\",\n        \"fnlwgt\",\n        \"education\",\n \
+          \       \"education_num\",\n        \"marital_status\",\n        \"occupation\"\
+          ,\n        \"relationship\",\n        \"race\",\n        \"sex\",\n    \
+          \    \"capital_gain\",\n        \"capital_loss\",\n        \"hours_per_week\"\
+          ,\n        \"native_country\",\n        \"income\",\n    ]\n    df = pd.read_csv(file_path,\
+          \ header=None, names=header)\n    # encode categorical data as integers\n\
+          \    categorical_columns = [\n        \"age\",\n        \"workclass\",\n\
+          \        \"education\",\n        \"marital_status\",\n        \"occupation\"\
+          ,\n        \"relationship\",\n        \"race\",\n        \"sex\",\n    \
+          \    \"native_country\",\n        \"income\",\n    ]\n    df[categorical_columns]\
+          \ = df[categorical_columns].apply(\n        lambda x: x.astype(\"category\"\
+          ).cat.codes, axis=0\n    )\n\n    df.to_csv(output_file, index=False)\n\n"
+        image: python:3.9
+    exec-train:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - train
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.7.0'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&\
+          \  python3 -m pip install --quiet --no-warn-script-location 'mlflow' 'pandas'\
+          \ 'scikit-learn' 'boto3' && \"$0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef train(file_path: InputPath(\"CSV\")) -> str:\n    import mlflow\n\
+          \    import mlflow.data\n    import pandas as pd\n    from sklearn.neural_network\
+          \ import MLPClassifier\n    from sklearn.model_selection import train_test_split\n\
+          \    import matplotlib.pyplot as plt\n    import boto3\n    from mlflow.models\
+          \ import infer_signature\n\n\n    mlflow.set_tracking_uri(\"http://mlflow-server.local/\"\
+          )\n\n    df = pd.read_csv(file_path)\n\n    labels_column = \"income\"\n\
+          \    train_x, test_x, train_y, test_y = train_test_split(\n        df.drop([labels_column],\
+          \ axis=1), \n        df[labels_column], \n        random_state=69\n    )\n\
+          \n    dataset = mlflow.data.from_pandas(df, source=file_path)\n\n\n\n  \
+          \  with mlflow.start_run(run_name=\"income_training\"):\n        alpha,\
+          \ hidden_layers = 1e-3, (2, 3)\n        mlp = MLPClassifier(\n         \
+          \   solver=\"lbfgs\",\n            alpha=alpha,\n            hidden_layer_sizes=hidden_layers,\n\
+          \            random_state=69,\n        )\n        mlflow.log_input(dataset,\
+          \ context=\"training\")\n        mlflow.log_param(\"alpha\", alpha)\n  \
+          \      mlflow.log_param(\"hidden_layers\", hidden_layers)\n\n        mlp.fit(train_x,\
+          \ train_y)\n\n        preds = mlp.predict(test_x)\n\n        signature =\
+          \ infer_signature(train_x, preds)\n\n        accuracy = (test_y == preds).sum()\
+          \ / preds.shape[0]\n        mlflow.log_metric(\"accuracy\", accuracy)\n\n\
+          \        reg_model_name = \"sk_income_model\"\n        # Log the trained\
+          \ model artifact\n        result = mlflow.sklearn.log_model(\n         \
+          \   sk_model=mlp,\n            artifact_path=\"income_model\",  # Corrected\
+          \ relative path within the bucket\n            signature=signature,\n  \
+          \          registered_model_name=reg_model_name,\n        )\n\n        #\
+          \ Log additional artifacts\n        # For example, log a confusion matrix\
+          \ plot\n        fig, ax = plt.subplots()\n        # Plot confusion matrix\
+          \ here\n        mlflow.log_figure(fig, \"confusion_matrix.png\")\n\n   \
+          \     # Save any additional files you want to log as artifacts\n       \
+          \ with open(\"additional_file.txt\", \"w\") as f:\n            f.write(\"\
+          Additional artifact content\")\n        mlflow.log_artifact(\"additional_file.txt\"\
+          )\n\n        return f\"{mlflow.get_artifact_uri()}/{result.artifact_path}\"\
+          \n\n"
+        env:
+        - name: MLFLOW_TRACKING_URI
+          value: http://mlflow-server.local/
+        - name: MLFLOW_S3_ENDPOINT_URL
+          value: http://mlflow-minio.local:30869/
+        - name: AWS_ACCESS_KEY_ID
+          value: minio
+        - name: AWS_SECRET_ACCESS_KEY
+          value: minio123
+        image: python:3.9
+pipelineInfo:
+  description: Pipeline for training and deploying a model trained on Census Income
+    dataset
+  name: income-pipeline
+root:
+  dag:
+    tasks:
+      download-dataset:
+        cachingOptions: {}
+        componentRef:
+          name: comp-download-dataset
+        inputs:
+          parameters:
+            url:
+              runtimeValue:
+                constant: https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data
+        taskInfo:
+          name: download-dataset
+      preprocess:
+        cachingOptions: {}
+        componentRef:
+          name: comp-preprocess
+        dependentTasks:
+        - download-dataset
+        inputs:
+          artifacts:
+            file_path:
+              taskOutputArtifact:
+                outputArtifactKey: output_file
+                producerTask: download-dataset
+        taskInfo:
+          name: preprocess
+      train:
+        cachingOptions: {}
+        componentRef:
+          name: comp-train
+        dependentTasks:
+        - preprocess
+        inputs:
+          artifacts:
+            file_path:
+              taskOutputArtifact:
+                outputArtifactKey: output_file
+                producerTask: preprocess
+        taskInfo:
+          name: train
+schemaVersion: 2.1.0
+sdkVersion: kfp-2.7.0
