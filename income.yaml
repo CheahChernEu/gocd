@@ -25,11 +25,11 @@ components:
     outputDefinitions:
       artifacts:
         output_file:
-          artifactType:q
+          artifactType:
             schemaTitle: system.Artifact
             schemaVersion: 0.0.1
-  comp-tain:
-    rexecutorLabel: exec-train
+  comp-train:
+    executorLabel: exec-train
     inputDefinitions:
       artifacts:
         file_path:
