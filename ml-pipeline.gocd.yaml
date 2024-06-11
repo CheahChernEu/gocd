@@ -12,7 +12,7 @@ pipelines:
         shallow_clone: false
         auto_update: true
         branch: main
-        encrypted_password: AES:1VySH8YXzPfz3zF7dP/SPA==:jWIuD4FAJ2eW6Dxm6LgS8g==
+        encrypted_password: AES:h5ez9a3WzopRwijnENcYug==:/Vjn3to4mHWLmeLw0ooD8g==
     stages:
     - ml-stage:
         fetch_materials: true
