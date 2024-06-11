@@ -102,6 +102,12 @@ def get_istio_auth_session(url: str, username: str, password: str) -> dict:
 
     return auth_session
 
+from kubernetes.client import V1EnvVar, V1Volume, V1VolumeMount, V1PersistentVolumeClaimVolumeSource
+import pandas as pd
+from kfp.dsl import component, InputPath, OutputPath, Output, Artifact
+from kfp import dsl
+
+
 @component(
     base_image="python:3.9",
     packages_to_install=["pandas", "mlflow"]
@@ -151,7 +157,7 @@ def preprocess(file_path: InputPath("CSV"), output_file: OutputPath("CSV")):
     base_image="python:3.9",
     packages_to_install=["mlflow", "pandas", "scikit-learn", "boto3"]
 )
-def train(file_path: InputPath("CSV")) -> str:
+def train(file_path: InputPath("CSV"), output_artifact: Output[Artifact]):
     import mlflow
     import mlflow.data
     import pandas as pd
@@ -159,10 +165,6 @@ def train(file_path: InputPath("CSV")) -> str:
     from sklearn.model_selection import train_test_split
     import matplotlib.pyplot as plt
     import boto3
-    from mlflow.models import infer_signature
-
-
-    mlflow.set_tracking_uri("http://mlflow-server.local/")
 
     df = pd.read_csv(file_path)
 
@@ -193,18 +195,14 @@ def train(file_path: InputPath("CSV")) -> str:
 
         preds = mlp.predict(test_x)
 
-        signature = infer_signature(train_x, preds)
-
         accuracy = (test_y == preds).sum() / preds.shape[0]
         mlflow.log_metric("accuracy", accuracy)
 
-        reg_model_name = "sk_income_model"
         # Log the trained model artifact
         result = mlflow.sklearn.log_model(
             sk_model=mlp,
-            artifact_path="income_model",  # Corrected relative path within the bucket
-            signature=signature,
-            registered_model_name=reg_model_name,
+            artifact_path="model",
+            registered_model_name="income_model",
         )
 
         # Log additional artifacts
@@ -218,7 +216,10 @@ def train(file_path: InputPath("CSV")) -> str:
             f.write("Additional artifact content")
         mlflow.log_artifact("additional_file.txt")
 
-        return f"{mlflow.get_artifact_uri()}/{result.artifact_path}"
+        data = f"{mlflow.get_artifact_uri()}/{result.artifact_path}"
+
+        with open(output_artifact.path, 'w') as f:
+            f.write(data)
 
 
 @component(
@@ -247,33 +248,39 @@ def download_dataset(url: str, output_file: OutputPath()):
 )
 def income_pipeline():
     downloader_task = download_dataset(url="https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data")
-    downloader_task.set_caching_options(False)
+    #downloader_task.set_caching_options(False)
     # Mount the PVC to the preprocess component
     preprocess_task = preprocess(file_path = downloader_task.output)
-    preprocess_task.set_caching_options(False)
+    #preprocess_task.set_caching_options(False)
 
     train_task = (
-    train(file_path=preprocess_task.output)
-    .set_env_variable(
-        name="MLFLOW_TRACKING_URI",
-        value="http://mlflow-server.local/",  # Adjust service name
-    )
-    .set_env_variable(
-        name="MLFLOW_S3_ENDPOINT_URL",
-        value="http://mlflow-minio.local:30869/",  # Adjust service name and port
-    )
-    .set_env_variable(
-        name="AWS_ACCESS_KEY_ID",
-        value="minio",
-    )
-    .set_env_variable(
-        name="AWS_SECRET_ACCESS_KEY",
-        value="minio123",
-    )
+        train(file_path=preprocess_task.output)
+
+        .set_env_variable(
+                name="MLFLOW_TRACKING_URI",
+                value="http://192.168.49.2:31403",
+            
+        )
+        .set_env_variable(
+                name="MLFLOW_S3_ENDPOINT_URL",
+                value="http://192.168.49.2:30869/",
+            
+        )
+        .set_env_variable(
+                name="AWS_ACCESS_KEY_ID",
+                value="minio",
+            
+        )
+        .set_env_variable(
+                name="AWS_SECRET_ACCESS_KEY",
+                value="minio123",
+            
+        )
+        
     )
     train_task.set_caching_options(False)
     #train_task.execution_options.caching_strategy.max_cache_staleness = "P0D"
-    
+
 
 # Compile the pipeline
 from kfp import compiler
@@ -283,7 +290,7 @@ compiler.Compiler().compile(pipeline_func=income_pipeline, package_path="income.
 from kfp.client import Client
 
 
-KUBEFLOW_ENDPOINT = "http://194.233.80.15:8090"
+KUBEFLOW_ENDPOINT = "http://194.233.80.15:8090/"
 KUBEFLOW_USERNAME = "user@example.com"
 KUBEFLOW_PASSWORD = "12341234"
  
