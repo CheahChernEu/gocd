@@ -257,12 +257,14 @@ def income_pipeline():
         train(file_path=preprocess_task.output)
 
         .set_env_variable(
-            name="MLFLOW_TRACKING_URI",
-            value="http://mlflow-server.local/",  # Adjust service name
+                name="MLFLOW_TRACKING_URI",
+                value="http://192.168.49.2:30401/",
+            
         )
         .set_env_variable(
-            name="MLFLOW_S3_ENDPOINT_URL",
-            value="http://mlflow-minio.local:30869/",  # Adjust service name and port
+                name="MLFLOW_S3_ENDPOINT_URL",
+                value="http://192.168.49.2:30869/",
+            
         )
         .set_env_variable(
                 name="AWS_ACCESS_KEY_ID",
@@ -288,7 +290,7 @@ compiler.Compiler().compile(pipeline_func=income_pipeline, package_path="income.
 from kfp.client import Client
 
 
-KUBEFLOW_ENDPOINT = "http://localhost:8090/"
+KUBEFLOW_ENDPOINT = "http://194.233.80.15:8090/"
 KUBEFLOW_USERNAME = "user@example.com"
 KUBEFLOW_PASSWORD = "12341234"
  
